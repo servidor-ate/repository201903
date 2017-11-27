@@ -18,6 +18,7 @@ spring:
 
 #Info DB    
   datasource:
+  
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://ec2-54-163-237-25.compute-1.amazonaws.com:5432/dbnpo31kqq31v1?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory
     username: eiqoxzmemjjjus
