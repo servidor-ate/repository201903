@@ -1,0 +1,2 @@
+heroku ps:scale web=1 worker=1
+web: java -Dserver.port=$PORT -jar target/ERPSpring-Salud-0.0.1-SNAPSHOT.jar
