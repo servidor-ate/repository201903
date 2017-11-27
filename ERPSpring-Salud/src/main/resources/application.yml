@@ -47,18 +47,14 @@ swagger:
 
                 
 ---
-
-
 spring:
-    profiles: heroku
+  profiles: default        
+        
+###########################################
+####Relacionado al despliegue  PROFILE DEFAULT
+###########################################
 server:
-  port: ${PORT}
-worker:
-  scheme: https
-  host: ${WORKER_HOST}
-  port: 443
-  
-
+   port: ${PORT:${SERVER_PORT:0}} 
         
 ---
 spring:
@@ -68,7 +64,7 @@ spring:
 ####Relacionado al despliegue  PROFILE LOCAL
 ###########################################
 server:
-  port: ${vcap.application.port:8061}
+  port: ${PORT:${SERVER_PORT:0}} 
 
                 
                 
