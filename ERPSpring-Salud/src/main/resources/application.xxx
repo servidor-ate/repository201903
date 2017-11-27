@@ -1,0 +1,70 @@
+###########################################
+###Relacionado a Spring - Hibernate , profile y admin
+###########################################
+
+spring:
+  profiles:
+    active: default
+    
+  application:
+    name: citas-hce
+        
+#Admin Boot    
+  boot:
+    admin:
+      #url:  http://localhost:1111
+      #username: admin
+      #password: 1234
+
+#Info DB    
+  datasource:
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://localhost:1433;databaseName=WEB_SALUDHCE_A
+    username: local
+    password: local2017
+     
+#Info Persistencia JPA y Hibernate                      
+  jpa:    
+    properties:
+      hibernate:                             
+        current_session_context_class: org.springframework.orm.hibernate4.SpringSessionContext
+        naming_strategy:  org.hibernate.cfg.DefaultNamingStrategy
+        #naming-strategy:  org.hibernate.cfg.ImprovedNamingStrategy        
+        dialect: org.hibernate.dialect.SQLServer2008Dialect
+        show_sql: true
+        format_sql: true          
+        packagesToScan : pe.royalsystems.springerp.model
+               
+
+#Atributos personalizados para la documentacion del API con SWAGGER
+
+swagger:
+  info:
+    title: Spring Boot REST API XXX
+    description: Spring Boot REST API - Citas - HCE - Salud
+  
+
+                
+---
+spring:
+  profiles: default        
+        
+###########################################
+####Relacionado al despliegue  PROFILE DEFAULT
+###########################################
+server:
+  port: ${vcap.application.port:8102}
+
+        
+---
+spring:
+  profiles: publicado
+        
+###########################################
+####Relacionado al despliegue  PROFILE LOCAL
+###########################################
+server:
+  port: ${vcap.application.port:8061}
+
+                
+                
