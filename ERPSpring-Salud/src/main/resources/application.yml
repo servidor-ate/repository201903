@@ -47,14 +47,17 @@ swagger:
 
                 
 ---
+
+
 spring:
-  profiles: default        
-        
-###########################################
-####Relacionado al despliegue  PROFILE DEFAULT
-###########################################
+    profiles: heroku
 server:
-  port: ${vcap.application.port:8102}
+  port: ${PORT}
+worker:
+  scheme: https
+  host: ${WORKER_HOST}
+  port: 443
+  
 
         
 ---
