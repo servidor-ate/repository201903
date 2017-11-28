@@ -1,3 +1,1 @@
-heroku ps:scale web=1 worker=1
-
-web:    java $JAVA_OPTS -jar target/dependency/webapp-runner.jar --port $PORT target/*.war
+web:   java $JAVA_OPTS -Dserver.port=$PORT -jar ERPSpring-Salud/target/ERPSpring-Salud-0.0.1-SNAPSHOT.jar
