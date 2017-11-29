@@ -40,6 +40,13 @@ public class PersonamastDaoImpl extends AbstractDaoImpl<Personamast, Integer>imp
 		if (UtilesCommons.noEsVacio(personamast.getEstado())) {
 			criteria.add(Restrictions.eq("estado", personamast.getEstado()));
 		}
+		if (UtilesCommons.noEsVacio(personamast.getTipoPersonaUsuario())) {
+			criteria.add(Restrictions.eq("tipoPersonaUsuario", personamast.getTipoPersonaUsuario()));
+		}		
+		if (UtilesCommons.noEsVacio(personamast.getIndicadorVinculada())) {
+			criteria.add(Restrictions.eq("indicadorVinculada", personamast.getIndicadorVinculada()));
+		}
+		
 		if(paginable){
 			criteria.setFirstResult(personamast.getInicio());
 			criteria.setMaxResults(personamast.getNumeroFilas());				
@@ -72,6 +79,12 @@ public class PersonamastDaoImpl extends AbstractDaoImpl<Personamast, Integer>imp
 		}
 		if (UtilesCommons.noEsVacio(personamast.getEstado())) {
 			criteria.add(Restrictions.eq("estado", personamast.getEstado()));
+		}
+		if (UtilesCommons.noEsVacio(personamast.getTipoPersonaUsuario())) {
+			criteria.add(Restrictions.eq("tipoPersonaUsuario", personamast.getTipoPersonaUsuario()));
+		}		
+		if (UtilesCommons.noEsVacio(personamast.getIndicadorVinculada())) {
+			criteria.add(Restrictions.eq("indicadorVinculada", personamast.getIndicadorVinculada()));
 		}
 		Object result = criteria.uniqueResult();
 		return Integer.parseInt(result!=null?result.toString():"0");

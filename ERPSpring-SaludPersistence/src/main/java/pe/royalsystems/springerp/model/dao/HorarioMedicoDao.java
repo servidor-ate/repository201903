@@ -17,7 +17,7 @@ public interface HorarioMedicoDao extends AbstractDao<SsCcHorario, Integer> {
 	public List<VwHorarioMedico> listarVwHorarioMedico(VwHorarioMedico filtro);
 	
 	
-	public List<Integer> listarMedicosEnHorario();
+	public List<Integer> listarMedicosEnHorario(SsCcHorario filtro);
 	
 	public List<Integer> listarEspecialidadesEnHorario();
 }

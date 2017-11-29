@@ -2,6 +2,7 @@ package pe.royalsystems.springerp.erpspringsalud.model;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import pe.royalsystems.springerp.erpspringsalud.util.JsonViewCustom;
@@ -22,12 +23,18 @@ public class HorarioBloqueJson extends EntidadJson {
 	private Integer estado;	
 	
 	/***vincualados con fecha**/
+	
+	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
 	private Date fechaInicio;
+	
+	//@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
 	private Date fechaFin;			
 	private String patterFecha;		
 	private String fechaInicioFormat;
-	private String fechaFinFormat;	
+	private String fechaFinFormat;
+		
 	private Date horaInicio;
+		
 	private Date horaFin;		
 	private String patterHora;
 	private String horaInicioFormat;

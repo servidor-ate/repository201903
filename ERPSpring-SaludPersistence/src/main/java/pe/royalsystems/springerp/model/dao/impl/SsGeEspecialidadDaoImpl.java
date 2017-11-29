@@ -11,7 +11,7 @@ import pe.royalsystems.springerp.model.dao.SsGeEspecialidadDao;
 import pe.royalsystems.springerp.model.domain.SsGeEspecialidad;
 
 @Repository
-public class SsGeEspecialidadDaoImpl extends AbstractDaoImpl<SsGeEspecialidad, String>implements SsGeEspecialidadDao {
+public class SsGeEspecialidadDaoImpl extends AbstractDaoImpl<SsGeEspecialidad, Integer>implements SsGeEspecialidadDao {
 
 	protected SsGeEspecialidadDaoImpl() {
 		super(SsGeEspecialidad.class);

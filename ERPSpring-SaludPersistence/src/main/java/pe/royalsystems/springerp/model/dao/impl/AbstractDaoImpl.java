@@ -218,11 +218,12 @@ public abstract class AbstractDaoImpl<E extends Entidad, I extends Serializable>
     }
 
     public void setOrdenableDesc(Entidad entidad, Criteria criteria){
-        if(entidad.isOrdernable()){
+        if(entidad.isOrdernableDesc()){
             criteria.addOrder(Order.desc(entidad.getAtributoOrdenacion()));
         }
     }
 
+    
     public void setOrdenable(Criteria criteria, String order, String ... columns){
         if(columns != null && columns.length > 0){
             List<String> list = Arrays.asList(columns);

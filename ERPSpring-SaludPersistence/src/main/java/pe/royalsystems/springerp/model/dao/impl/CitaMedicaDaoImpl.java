@@ -63,11 +63,53 @@ public class CitaMedicaDaoImpl extends AbstractDaoImpl<SsCcCita, Integer> implem
 		if(UtilesCommons.noEsVacio(filtro.getEstadoDocumento())){
 			cq.add(Restrictions.eq("estadoDocumento", filtro.getEstadoDocumento()));
 		}
-		if(filtro.getFechaInicioBusqueda() != null && filtro.getFechaFinBusqueda() != null){
-			cq.add(Restrictions.between("fechaCita", filtro.getFechaInicioBusqueda(), filtro.getFechaFinBusqueda()));
-		}
-		setPaginable(filtro, cq);
+		
+		
+		if (filtro.getFechaCita()!=null || filtro.getFechaInicioBusqueda()!=null) {
+			try{
+				if(filtro.getFechaInicioBusqueda() != null && filtro.getFechaFinBusqueda() != null){
+					filtro.setNombreConsulta("RANGO");
+				}				
+				if("RANGO".equals(filtro.getNombreConsulta())){ // flag si las fechas son iguales o no
+					
+					// --- RANGOOO ----
+					//Conjunction and = Restrictions.conjunction();
+					// mayor igual que
+					String fechaIniStr = UtilesCommons.printDate("yyyyMMdd",filtro.getFechaInicioBusqueda()); 
+					Date fechaIni = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaIniStr+"00:00:00");
+					cq.add( Restrictions.ge("fechaCita",fechaIni) );							
+					if (filtro.getFechaFinBusqueda()!=null ) {
+						// menor que
+						
+						// getFechaCita // fecha Inicio
+						// getFechaFinBusqueda // fecha fin						
+						String fechaFinStr = UtilesCommons.printDate("yyyyMMdd",filtro.getFechaFinBusqueda()); 
+						Date fechaFin = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaFinStr+"23:59:59");
+						cq.add( Restrictions.lt("fechaCita",fechaFin) ); 							    					   
+					}				
+				}else{			
+					if(filtro.getFechaCita()!=null){
+						// MISMA FECHA 					
+						String fechaIniStr = UtilesCommons.printDate("yyyyMMdd",filtro.getFechaCita()); 
+						String fechaFinStr = UtilesCommons.printDate("yyyyMMdd",UtilesCommons.fechaMasNumeroDias(filtro.getFechaCita(),1));
+						Date fechaIni = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaIniStr+"00:00:00");					
+						Date fechaFin = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaFinStr+"00:00:00");
+						cq.add( Restrictions.ge("fechaCita",fechaIni) );
+						cq.add( Restrictions.lt("fechaCita", fechaFin));										
+					}
+				}					
+			}catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}	
+//		if(filtro.getFechaInicioBusqueda() != null && filtro.getFechaFinBusqueda() != null){
+//		cq.add(Restrictions.between("fechaCita", filtro.getFechaInicioBusqueda(), filtro.getFechaFinBusqueda()));
+//	}
+		
+		
+		setPaginable(filtro, cq);		
 		setOrdenableAsc(filtro, cq);
+		setOrdenableDesc(filtro, cq);
 		return (List<SsCcCita>) cq.list();
 	}
 

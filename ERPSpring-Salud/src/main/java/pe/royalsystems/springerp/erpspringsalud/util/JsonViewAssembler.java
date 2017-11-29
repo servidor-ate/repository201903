@@ -52,6 +52,24 @@ public class JsonViewAssembler<S,T> {
 		//return getJsonObjectReflect(object) ;
 	}
 	
+	/** Mapear un OBJETO de clase S a otro objeto de clase T  , para luego mapear los valores de los objetos siguientes
+	 * , si los hubiesen, (nextObjects)
+	 * @param object
+	 * @return
+	 */	
+	public T getJsonObjectMultiple(S firstObject,  Object ... nextObjects ) {
+		//mapear de Primer objeto origen
+		T destinoObj = getJsonObjectDozer(firstObject) ;
+		//ahora mapear de segundo objeto origen
+		if(destinoObj!=null && nextObjects !=null){
+			for(Object objSgt :  nextObjects){
+				mapperDozer.map(objSgt, destinoObj);	
+			}				
+		}		
+		return destinoObj;
+		//return getJsonObjectReflect(object) ;
+	}
+	
 		
 	/** Mapear un OBJETO de clase S a otro objeto de clase T , que es recibido, sobrescribiendo sus valores actuales.
 	 * @param object

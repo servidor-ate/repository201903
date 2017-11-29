@@ -84,9 +84,6 @@ public class SgAgenteDaoImpl extends AbstractDaoImpl<SgAgente, Integer> implemen
 			if (objsgAgente.getNombre()!=null) {
 				criteria.add(Restrictions.like("nombre", objsgAgente.getNombre(),MatchMode.ANYWHERE).ignoreCase());
 			}
-			if (UtilesCommons.noEsVacio(objsgAgente.getCodigoAgente())) {			
-				criteria.add(Restrictions.like("codigoAgente", objsgAgente.getCodigoAgente(),MatchMode.ANYWHERE).ignoreCase());
-			}
 			if (objsgAgente.getIdEmpleado()!=null && objsgAgente.getIdEmpleado() !=0) {
 				criteria.add(Restrictions.eq("idEmpleado", objsgAgente.getIdEmpleado()));
 			}
@@ -104,6 +101,10 @@ public class SgAgenteDaoImpl extends AbstractDaoImpl<SgAgente, Integer> implemen
 				if (UtilesCommons.noEsVacio(objsgAgente.getCodigoAgente())) {
 					criteria.add(Restrictions.eq("codigoAgente", objsgAgente.getCodigoAgente()));				
 				}
+			}else{
+				if (UtilesCommons.noEsVacio(objsgAgente.getCodigoAgente())) {			
+					criteria.add(Restrictions.like("codigoAgente", objsgAgente.getCodigoAgente(),MatchMode.ANYWHERE).ignoreCase());
+				}			
 			}
 			
 			return Integer.parseInt(criteria.uniqueResult().toString());
@@ -180,9 +181,7 @@ public class SgAgenteDaoImpl extends AbstractDaoImpl<SgAgente, Integer> implemen
 		if (objsgAgente.getNombre()!=null) {
 			criteria.add(Restrictions.like("nombre", objsgAgente.getNombre(),MatchMode.ANYWHERE).ignoreCase());
 		}
-		if (UtilesCommons.noEsVacio(objsgAgente.getCodigoAgente())) {			
-			criteria.add(Restrictions.like("codigoAgente", objsgAgente.getCodigoAgente(),MatchMode.ANYWHERE).ignoreCase());
-		}
+
 		if (objsgAgente.getIdEmpleado()!=null && objsgAgente.getIdEmpleado() !=0) {
 			criteria.add(Restrictions.eq("idEmpleado", objsgAgente.getIdEmpleado()));
 		}
@@ -200,6 +199,10 @@ public class SgAgenteDaoImpl extends AbstractDaoImpl<SgAgente, Integer> implemen
 			if (UtilesCommons.noEsVacio(objsgAgente.getCodigoAgente())) {
 				criteria.add(Restrictions.eq("codigoAgente", objsgAgente.getCodigoAgente()));				
 			}
+		}else{
+			if (UtilesCommons.noEsVacio(objsgAgente.getCodigoAgente())) {			
+				criteria.add(Restrictions.like("codigoAgente", objsgAgente.getCodigoAgente(),MatchMode.ANYWHERE).ignoreCase());
+			}			
 		}
 		if(paginable){
 			criteria.setFirstResult(objsgAgente.getInicio());

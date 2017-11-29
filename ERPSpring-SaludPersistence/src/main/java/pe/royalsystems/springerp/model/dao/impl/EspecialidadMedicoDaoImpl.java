@@ -53,9 +53,24 @@ public class EspecialidadMedicoDaoImpl extends AbstractDaoImpl<SsGeEspecialidadM
 		if(UtilesCommons.noEsVacio(filtro.getCodigo())){
 			cq.add(Restrictions.ilike("codigo", filtro.getCodigo(), MatchMode.ANYWHERE));
 		}
-		if(UtilesCommons.noEsVacio(filtro.getListInteger()) && UtilesCommons.noEsVacio(filtro.getAtributoList())){
-			cq.add(Restrictions.in(filtro.getAtributoList(), filtro.getListInteger()));
+		
+		if("NO_IN_MEDICO".equals(filtro.getNombreConsulta())){
+			if(UtilesCommons.noEsVacio(filtro.getListInteger()) && UtilesCommons.noEsVacio(filtro.getAtributoList())){
+				cq.add(Restrictions.not(
+						Restrictions.in(filtro.getAtributoList(), filtro.getListInteger())
+						)
+					);
+			}			
+		}else if("IN_MEDICO".equals(filtro.getNombreConsulta())){								
+			if(UtilesCommons.noEsVacio(filtro.getListInteger()) && UtilesCommons.noEsVacio(filtro.getAtributoList())){
+				cq.add(Restrictions.in(filtro.getAtributoList(), filtro.getListInteger()));
+			}			
+		}else{
+			if(UtilesCommons.noEsVacio(filtro.getListInteger()) && UtilesCommons.noEsVacio(filtro.getAtributoList())){
+				cq.add(Restrictions.in(filtro.getAtributoList(), filtro.getListInteger()));
+			}			
 		}
+		
 		setPaginable(filtro, cq);
 		setOrdenableAsc(filtro, cq);
 		return (List<VwEspecialidadMedico>) cq.list();

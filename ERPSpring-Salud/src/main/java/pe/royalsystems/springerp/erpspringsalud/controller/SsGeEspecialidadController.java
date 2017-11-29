@@ -18,7 +18,6 @@ import pe.royalsystems.springerp.erpspringsalud.model.SsGeEspecialidadJson;
 import pe.royalsystems.springerp.erpspringsalud.util.JsonViewAssembler;
 import pe.royalsystems.springerp.erpspringsalud.util.JsonViewCustom;
 import pe.royalsystems.springerp.model.domain.SsGeEspecialidad;
-
 import pe.royalsystems.springerp.service.EspecialidadService;
 import pe.royalsystems.springerp.service.SsGeEspecialidadService;
 
@@ -28,7 +27,7 @@ import pe.royalsystems.springerp.service.SsGeEspecialidadService;
 public class SsGeEspecialidadController {
 	
 	@Autowired
-	EspecialidadService especialidadService ;
+	EspecialidadService especialidadService ; 
 	
 	@Autowired
 	SsGeEspecialidadService ssGeEspecialidadService;
@@ -132,4 +131,30 @@ public class SsGeEspecialidadController {
 	        }
 	        	     
 	    }
+	    
+	    
+	    /** listar todos los elementos ... filtrando con los favoritos del Agente 
+	     * @return
+	     */
+	    @RequestMapping(value = "/all/favoritos/{idagente}", method = RequestMethod.GET)	   
+	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)	    
+	    public ResponseEntity<List<SsGeEspecialidadJson>> listAllElementosFavoritos(
+	    		@PathVariable("idagente") Integer idagente
+	    		) {
+	        List<SsGeEspecialidad> users = especialidadService.listarEspecialidadesFavoritos(new SsGeEspecialidad(),
+	        		idagente);	        	        	       	        
+	        if(users.isEmpty()){
+	            return new ResponseEntity<List<SsGeEspecialidadJson>>(HttpStatus.NO_CONTENT);	            
+	        }else{
+		        List<SsGeEspecialidadJson> usersJson = jsonAssemb.getJsonListDozer(users);		    
+			      //usar variables correctas del MAPEO  ***JRE_1.8 
+		        usersJson.forEach(emJson -> {
+		        								emJson.setIndicaFavorito(emJson.isBool_1());
+		        								emJson.setIconoFavorito(emJson.getString1());
+		        								emJson.setIdFavorito(emJson.getInt_1());
+		        								emJson.setFavoritoSecuencia(emJson.getInt_2());
+		        							} );
+		        return new ResponseEntity<List<SsGeEspecialidadJson>>(usersJson, HttpStatus.OK);	        	
+	        }
+	    }	    
 }

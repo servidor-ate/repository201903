@@ -4,7 +4,7 @@ import java.util.List;
 
 import pe.royalsystems.springerp.model.domain.SsGeEspecialidad;
 
-public interface SsGeEspecialidadDao extends AbstractDao<SsGeEspecialidad, String> {
+public interface SsGeEspecialidadDao extends AbstractDao<SsGeEspecialidad, Integer> {
 
 	public List<SsGeEspecialidad> listarSsGeEspecialidad(SsGeEspecialidad ssGeEspecialidad);
 

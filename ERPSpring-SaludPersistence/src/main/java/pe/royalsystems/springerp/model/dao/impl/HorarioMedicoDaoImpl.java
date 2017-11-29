@@ -89,7 +89,7 @@ public class HorarioMedicoDaoImpl extends AbstractDaoImpl<SsCcHorario, Integer> 
 		setFiltroHorario(filtro, cq);
 		setFiltroFechas(filtro, cq);
 		setPaginable(filtro, cq);
-		setOrdenable(cq, ORDER_ASC, "fechaInicio", "horaInicio");
+		setOrdenable(cq, ORDER_ASC, "fechaInicio", "horaInicio");		
 		return (List<VwHorarioMedico>) cq.list();
 	}
 	
@@ -174,8 +174,31 @@ public class HorarioMedicoDaoImpl extends AbstractDaoImpl<SsCcHorario, Integer> 
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<Integer> listarMedicosEnHorario() {
+	public List<Integer> listarMedicosEnHorario(SsCcHorario filtro) {
 		Criteria cq = createCriteria();
+		if("FILTRO_RANGO_FECHAS".equals(filtro.getNombreConsulta())){
+			 /** 	(fechaInicio <= horarioFechaInicio && fechaFin >= horarioFechaInicio) 
+			 * 		|| ( fechaFin >= horarioFechaFin && fechaInicio <= horarioFechaFin )
+			 * */
+			if(filtro.getFechaInicioBusqueda() != null && filtro.getFechaFinBusqueda() != null){
+				Criterion filtroInicioA = Restrictions.le("fechaInicio", filtro.getFechaInicioBusqueda());
+				Criterion filtroFinA = Restrictions.ge("fechaFin", filtro.getFechaInicioBusqueda());
+				Criterion clausulaA = Restrictions.and(filtroInicioA, filtroFinA);
+								
+				Criterion filtroInicioB = Restrictions.le("fechaInicio", filtro.getFechaFinBusqueda());
+				Criterion filtroFinB = Restrictions.ge("fechaFin", filtro.getFechaFinBusqueda());
+				Criterion clausulaB = Restrictions.and(filtroInicioB, filtroFinB);
+				cq.add(Restrictions.or(clausulaA, clausulaB));
+			}
+		}
+		
+		
+		if(UtilesCommons.noEsVacio(filtro.getIdEspecialidad())){
+			cq.add(Restrictions.eq("idEspecialidad", filtro.getIdEspecialidad()));
+		}		
+		if(UtilesCommons.noEsVacio(filtro.getEstado())){
+			cq.add(Restrictions.eq("estado", filtro.getEstado()));
+		}
 //		cq.add(Restrictions.eq("estado", Constant.INT_ACTIVO));
 		cq.setProjection(Projections.distinct(Projections.property("medico")));
 		return (List<Integer>) cq.list();

@@ -1,5 +1,6 @@
 package pe.royalsystems.springerp.erpspringsalud.controller;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import pe.royalsystems.springerp.erpspringsalud.model.PersonamastJson;
 import pe.royalsystems.springerp.erpspringsalud.util.JsonViewAssembler;
 import pe.royalsystems.springerp.erpspringsalud.util.JsonViewCustom;
 import pe.royalsystems.springerp.erpspringsalud.util.UtilesRest;
+import pe.royalsystems.springerp.commons.UtilesCommons;
 import pe.royalsystems.springerp.model.domain.Personamast;
 import pe.royalsystems.springerp.service.PersonamastService;
 
@@ -41,7 +43,7 @@ public class PersonamastController {
 	     * @return
 	     */
 	    @RequestMapping(value = "/all/", method = RequestMethod.GET)	   
-	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
+	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)	    
 	    public ResponseEntity<List<PersonamastJson>> listAllElementos() {
 	        List<Personamast> users = personamastService.listarPersonamast(new Personamast(),false);	        	        	       	        
 	        
@@ -210,6 +212,28 @@ public class PersonamastController {
 	    }	 	  		 
 	
 
+	     
+	    /** listar todos  elementos de los dependientes
+	     * @return
+	     */
+	    @RequestMapping(value = "/dependientes/{idTitular}", method = RequestMethod.GET)	   
+	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)	    
+	    public ResponseEntity<List<PersonamastJson>> listFamiliares(@PathVariable("idTitular") Integer idTitular) {
+	    	Personamast objFiltro =  new Personamast();
+	    	objFiltro.setIndicadorVinculada(idTitular);//Aux para persona TITULAR	    	
+	        List<Personamast> users = personamastService.listarPersonamast(objFiltro,false);	        	        	       	        
+	        
+	        if(users.isEmpty()){
+	            return new ResponseEntity<List<PersonamastJson>>(HttpStatus.NO_CONTENT);	            
+	        }else{
+		        List<PersonamastJson> usersJson = jsonAssemb.getJsonListDozer(users);		    
+		        
+		        return new ResponseEntity<List<PersonamastJson>>(usersJson, HttpStatus.OK);	        	
+	        }
+	    }
+	 
+	    
+	    
 	    /**Regsitrar la persona - paciente - usuario
 	     * @param persona
 	     * @param ucBuilder
@@ -220,13 +244,27 @@ public class PersonamastController {
 	    public ResponseEntity<PersonamastJson> registrarPersonaUsuario(@RequestBody PersonamastJson persona,    UriComponentsBuilder ucBuilder) {	        
 	         try{	 
 	        	 Personamast objTransacc = jsonAssembInverso.getJsonObject(persona);
-	        	 int result= personamastService.guardarUsuarioPaciente(objTransacc);	
-					
+	        	 objTransacc.setUltimaFechaModif(null);
+	        	 objTransacc.setFechaNacimiento(null);
+	        	 objTransacc.setIngresoFechaRegistro(null);
+	        	 objTransacc.setFecIniDiscamec(null);
+	        	 objTransacc.setFecFinDiscamec(null);
+	        	 objTransacc.setInicioArma(null);
+	        	 objTransacc.setVencimientoArma(null);
+	        	 objTransacc.setBreveteFecvcto(null);
+	        	 objTransacc.setCarnetextranjeriaFecvcto(null);
+					if(UtilesCommons.noEsVacio(persona.getCodLicArma())){
+						Date fechaFiltro = UtilesCommons.getDateFormat("yyyyMMdd", persona.getCodLicArma());
+						objTransacc.setFechaNacimiento(fechaFiltro);
+					}
+	        	
+	        	 int result= personamastService.guardarUsuarioPaciente(objTransacc);		        	 
 	        	 if(result>0){				
+	        		 objTransacc.setPersona(result);//SET ID DE PERSONA, si fuera nuevo...
 	        		 int resultCorreo = personamastService.enviarCorreoRegistroPersonaUsuario(objTransacc);
 	        		 //boolean resultEnvio = postEnvioCorreoUser(resultCorreo);
 	        		 persona.setAccion(""+resultCorreo);//AUX RESULT CORREO
-	        		 
+	        		 persona.setPersona(result);//SET ID DE PERSONA, si fuera nuevo...	 
 	        		 return new ResponseEntity<PersonamastJson>(persona, HttpStatus.CREATED);	 
 	        	 }else{
 	        		 return new ResponseEntity<PersonamastJson>(persona, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -262,7 +300,7 @@ public class PersonamastController {
 		 * @param reusltMsg
 		 * @return
 		 */
-		public boolean postEnvioCorreoUser(OpearacionResultJson objResult, int reusltMsg) {
+		public boolean postEnvioCorreoUser(OpearacionResultJson objResult,int reusltMsg) {
 			boolean result = false;
 			/**MOSTRAR MENSAJES */
 			String mensaje = UtilesRest.getMsgResultCorreo(reusltMsg);

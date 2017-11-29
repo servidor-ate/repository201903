@@ -5,7 +5,9 @@ import static pe.royalsystems.springerp.model.util.Constant.INT_ACTIVO;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +36,8 @@ import pe.royalsystems.springerp.model.domain.VwPersonapaciente;
 import pe.royalsystems.springerp.model.domain.vista.VwHorarioMedico;
 import pe.royalsystems.springerp.model.domain.vista.VwPacienteobligacione;
 import pe.royalsystems.springerp.model.util.Constant;
+import pe.royalsystems.springerp.service.CitaMedicaService;
+import pe.royalsystems.springerp.service.DiaFeriadoService;
 import pe.royalsystems.springerp.service.HorarioMedicoService;
 import pe.royalsystems.springerp.service.VwPacienteobligacioneService;
 import pe.royalsystems.springerp.service.VwPersonapacienteService;
@@ -54,14 +58,17 @@ public class VwHorarioMedicoController {
 	@Autowired
 	HorarioMedicoService horarioMedicoService ; 
 	
-	//@Autowired
-	//CitaMedicaService citaMedicaService;
+	@Autowired
+	CitaMedicaService citaMedicaService;
 
 	@Autowired
 	VwPersonapacienteService vwPersonapacienteService;
 
 	@Autowired
 	VwPacienteobligacioneService vwPacienteobligacioneService;
+	
+	@Autowired
+	DiaFeriadoService diaFeriadoService;
 	
 	 private JsonViewAssembler<VwHorarioMedico, VwHorarioMedicoJson> jsonAssemb = 
 			 new JsonViewAssembler<VwHorarioMedico, VwHorarioMedicoJson>(VwHorarioMedicoJson.class);
@@ -148,7 +155,7 @@ public class VwHorarioMedicoController {
 	    	try{
 				//Se debe encontrar en el formato correcto
 		    	Date fechaFiltro = new Date();										
-				return listBloquesFecha(fechaFiltro,idmedico,idespecialidad);		
+				return listBloquesFecha(fechaFiltro,idmedico,idespecialidad,0);		
 	    	}catch(Exception e){
 	    		Log.error(e, "listBloquesFechaMedicoEspecialidad");
 	    		return new ResponseEntity<List<HorarioBloqueJson>>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -160,11 +167,13 @@ public class VwHorarioMedicoController {
 	     * @param idespecialidad
 	     * @return
 	     */
-	    @RequestMapping(value = "/bloquehorario/fecha/{idmedico}/{idespecialidad}/{yyyyMMdd}/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)    		
+	    @RequestMapping(value = "/bloquehorario/fecha/{idmedico}/{idespecialidad}/{yyyyMMdd}/{cant_dias_post}/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)    		
 	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
 	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesFechaMedicoEspecialidad(
 	    		@PathVariable("idmedico") Integer idmedico,@PathVariable("idespecialidad") Integer idespecialidad,
-	    		@PathVariable("yyyyMMdd") String fechaformato
+	    		@PathVariable("yyyyMMdd") String fechaformato,
+	    		@PathVariable("cant_dias_post") Integer cant_dias_post
+	    		
 	    		) {
 	    	try{
 				//Se debe encontrar en el formato correcto
@@ -172,7 +181,7 @@ public class VwHorarioMedicoController {
 				if(UtilesCommons.noEsVacio(fechaformato)){
 					fechaFiltro = UtilesCommons.getDateFormat("yyyyMMdd", fechaformato);
 				}						
-				return listBloquesFecha(fechaFiltro,idmedico,idespecialidad);		
+				return listBloquesFecha(fechaFiltro,idmedico,idespecialidad,cant_dias_post!=null?cant_dias_post:0);		
 	    	}catch(Exception e){
 	    		Log.error(e, "listBloquesFechaMedicoEspecialidad");
 	    		return new ResponseEntity<List<HorarioBloqueJson>>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -181,16 +190,190 @@ public class VwHorarioMedicoController {
 	    }	    
 	    
 	    
-	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesFecha(Date fechaFiltro,
-	    		Integer idmedico,Integer idespecialidad){
+	    /** listar BLOQUES DE HORARIO (FECHA POR PARAMETRO), de acuerdo a la especialidad
+	     * @param idespecialidad
+	     * @param fechaformato
+	     * @return
+	     */
+	    @RequestMapping(value = "/bloquehorario/fecha/{idespecialidad}/{yyyyMMdd}/{cant_dias_post}/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)    		
+	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesFechaEspecialidad(
+	    		@PathVariable("idespecialidad") Integer idespecialidad,
+	    		@PathVariable("yyyyMMdd") String fechaformato,
+	    		@PathVariable("cant_dias_post") Integer cant_dias_post
+	    		) {
+	    	try{
+				//Se debe encontrar en el formato correcto
+		    	Date fechaFiltro = new Date();
+				if(UtilesCommons.noEsVacio(fechaformato)){
+					fechaFiltro = UtilesCommons.getDateFormat("yyyyMMdd", fechaformato);
+				}						
+				return listBloquesFecha(fechaFiltro,null,idespecialidad,cant_dias_post!=null?cant_dias_post:0);		
+	    	}catch(Exception e){
+	    		Log.error(e, "listBloquesFechaMedicoEspecialidad");
+	    		return new ResponseEntity<List<HorarioBloqueJson>>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    	}
+		    		    	        	
+	    }	
+	    
+	    /** Listar bloques horarios de las Citas programadas del paciente
+	     * @param idPaciente
+	     * @return
+	     */
+	    @RequestMapping(value = "/bloquecitaspaciente/{idpaciente}/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)    		
+	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesFechaCitasPaciente(
+	    		@PathVariable("idpaciente") Integer idPaciente
+	    		
+	    		) {
+	    	try{
+				return listBloquesHorarioCitaPaciente(idPaciente);		
+	    	}catch(Exception e){
+	    		Log.error(e, "listBloquesFechaMedicoEspecialidad");
+	    		return new ResponseEntity<List<HorarioBloqueJson>>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    	}
+		    		    	        	
+	    }	
+	    
+	    /** Listar bloques horarios de las Citas programadas del medico
+	     * @param idmedico
+	     * @param fechaformato
+	     * @return
+	     */
+	    @RequestMapping(value = "/bloquecitasmedico/{idmedico}/{yyyyMMdd}/{cant_dias_post}/", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)    		
+	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesFechaCitasMedico(
+	    		@PathVariable("idmedico") Integer idmedico,
+	    		@PathVariable("yyyyMMdd") String fechaformato,
+	    		@PathVariable("cant_dias_post") Integer cant_dias_post
+	    		) {
+	    	try{
+				return listBloquesHorarioCitaMedico(idmedico,fechaformato,cant_dias_post);		
+	    	}catch(Exception e){
+	    		Log.error(e, "listBloquesFechaMedicoEspecialidad");
+	    		return new ResponseEntity<List<HorarioBloqueJson>>(HttpStatus.INTERNAL_SERVER_ERROR);
+	    	}
+		    		    	        	
+	    }		    
+	    
+	    
+	    /**********************************************************************/
+	    /***************************UTILES HORARIO - CALENDARIO****************/
+
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesHorarioCitaMedico(Integer idMedico,String fechaformato,
+	    		int cantDiasPosteriores){
+			//Se debe encontrar en el formato correcto
+	    	Date fechaFiltro = null;
+			if(UtilesCommons.noEsVacio(fechaformato)){
+				fechaFiltro = UtilesCommons.getDateFormat("yyyyMMdd", fechaformato);
+			}	
+	    	return listBloquesHorarioCitas(null,idMedico,fechaFiltro,cantDiasPosteriores);
+	    }
+	    
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesHorarioCitaPaciente(Integer idPaciente){
+	    	return listBloquesHorarioCitas(idPaciente,null,null,0);
+	    }
+	    /** Generar y listar los Bloques de Horario a partir de las CITAS de un  determinado PACIENTE
+	     * @param idPaciente
+	     * @return
+	     */
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesHorarioCitas(Integer idPaciente,
+	    		Integer idMedico, Date fechaCita,int cantDiasPosteriores){
+	    	List<HorarioBloqueJson> listaHorarioBloque = new ArrayList<HorarioBloqueJson>();
 	    	
-	    	if( idmedico  == 0){
+	    	if(UtilesCommons.noEsVacio(idPaciente) || UtilesCommons.noEsVacio(idMedico)){//OBS...para no traer data innecesaria...
+		    	/**Mapear las CITAS del PACIENTE  por fecha*/
+		    	SsCcCita filtro = new SsCcCita();
+		    	filtro.setEstado(Constant.INT_ACTIVO);
+		    	filtro.setIdPaciente(idPaciente);
+		    	filtro.setIdMedico(idMedico);
+		    	filtro.setFechaCita(fechaCita);
+		    			    	
+		    	if(cantDiasPosteriores > 0 && fechaCita != null){
+		    		//Rango de fechas
+		    		filtro.setFechaInicioBusqueda(fechaCita);		    		
+		    		filtro.setFechaFinBusqueda(UtilesCommons.fechaMasNumeroDias(fechaCita,cantDiasPosteriores));
+		    		filtro.setNombreConsulta("RANGO");	
+		    	}
+		    	filtro.setOrdernableDesc(true);		  
+		    	filtro.setAtributoOrdenacion("fechaCita");
+		    	
+		        List<SsCcCita> listaCitasResult = citaMedicaService.listarCitasMedicas(filtro);
+		        
+		        if(UtilesCommons.noEsVacio(listaCitasResult)){
+		        	Map<String, VwHorarioMedico> mapHorariosMedicos = new LinkedHashMap<String,VwHorarioMedico>();	
+		        	
+		        	/**Generar LOS HORARIOS MEDICOS a partir de las CITAS (evitando repeticiones)*/
+		        	for(SsCcCita citas : listaCitasResult){
+		    	    	VwHorarioMedico filtroHorario = new  VwHorarioMedico();
+		    	    	filtroHorario.setIdHorario(citas.getIdHorario());	  
+		    	    	String key = ""+citas.getIdHorario();
+	    	    		if(!mapHorariosMedicos.containsKey(key)){
+	    	    	    	List<VwHorarioMedico> listResult = horarioMedicoService.listarVwHorarioMedico(filtroHorario);
+	    	    	    	if(UtilesCommons.noEsVacio(listResult)){
+	    	    	    		mapHorariosMedicos.put(key, listResult.get(0));
+	    	    	    	}    	    			
+	    	    		}	    	    	
+		        	}
+		        	//Para el Tope de recorrido de los bloques de horario
+		        	DateTime inicio=null , fin=null; //NULL: sin rango de validación	        	
+		        	VwHorarioMedico filtroHorario = null;
+		        	
+		        	Map<String, GE_DiaFeriado>  feriados = obtenerFeriados(inicio, fin);
+					LocalDate fechaFinGeneracion; LocalDate fechaInicioGeneracion;
+					
+		        	/**recorrer LOS HORARIOS MEDICOS de las CITAS*/
+		        	if(UtilesCommons.noEsVacio(mapHorariosMedicos)){
+		        		for(VwHorarioMedico vista : mapHorariosMedicos.values()){
+		        			/**Generar LOS BLOQUES DE HORARIOS de las CITAS*/
+		        			filtroHorario = vista;
+		        			
+		        			//Obtener las CITAS por HORARIO ...
+		        			filtro.setIdHorario(vista.getIdHorario());		        			
+		        			List<SsCcCita> listaCitasHorario = citaMedicaService.listarCitasMedicas(filtro);
+		        			for(SsCcCita cita : listaCitasHorario){
+		        				if(cita.getFechaCita()!=null){
+			        				inicio = TimeCommons.convertirEnDateTime(cita.getFechaCita()) ;
+			        				fin = inicio.plusMinutes(filtroHorario.getTiempoPromedioAtencion().intValue());
+			        				 
+									HorarioBloqueJson eventBloque = getHorarioMedicoBloque(filtroHorario, inicio, fin);									
+									String titulo = eventBloque.getTituloBloque();
+									eventBloque.setTituloBloque(titulo+HORARIO_OCUPADO);											
+									eventBloque.setCitaAsignada(true);
+									eventBloque.setIdCita(cita.getIdCita());
+									eventBloque.setEtiquetaBloque(HORARIO_OCUPADO);
+									//cargar datos paciente
+									setDatosPacienteAtencion(eventBloque, cita,filtroHorario);																	
+									listaHorarioBloque.add(eventBloque);
+		        				}
+		        			}		    						    																			
+			        	}	
+		        	}
+		        }	  	
+	    	}      	       			
+	    	 return new ResponseEntity<List<HorarioBloqueJson>>(listaHorarioBloque, HttpStatus.OK);
+	    }
+	    		
+	    
+	    /** listar los BLOQUES DE HORARIO del MEDICO, de acuerdo a una fecha, la especialidad y/o el MEDICO
+	     * @param fechaFiltro
+	     * @param idmedico
+	     * @param idespecialidad
+	     * @return
+	     */
+	    public ResponseEntity<List<HorarioBloqueJson>> listBloquesFecha(Date fechaFiltro,
+	    		Integer idmedico,Integer idespecialidad,int cantDiasPosteriores){
+	    	
+	    	if( idmedico != null && idmedico  == 0){
 	    		idmedico = null; //*** it means all medics
 	    	}
-	    	
+	    	Date fechaFiltroFin = fechaFiltro;
+			if(cantDiasPosteriores > 0){
+				fechaFiltroFin = UtilesCommons.fechaMasNumeroDias(fechaFiltro,cantDiasPosteriores);
+			}
 	    	VwHorarioMedico  filtro = getFiltroHorarioDefault(idmedico,idespecialidad);
 			DateTime inicio = TimeCommons.convertirEnDateTime(fechaFiltro); 
-			DateTime fin = TimeCommons.convertirEnDateTime(fechaFiltro);			
+			DateTime fin = TimeCommons.convertirEnDateTime(fechaFiltroFin);			
 			inicio = inicio.minusMonths(1);
 			fin = fin.plusMonths(1);				
 			int primerDiaMes = TimeCommons.getPrimerDiaDelMes(inicio);
@@ -199,7 +382,8 @@ public class VwHorarioMedicoController {
 			fin = fin.withDayOfMonth(ultimoDiaMes);
 			filtro.setFechaInicio(inicio.toDate());
 			filtro.setFechaFin(fin.toDate());
-					
+			Map<String, GE_DiaFeriado>  feriados = obtenerFeriados(inicio, fin);	
+	    	
 	    	List<VwHorarioMedico> listResult = horarioMedicoService.listarVwHorarioMedico(filtro);	    		    	
 	        if(listResult == null || listResult.isEmpty()){	        	
 	            return new ResponseEntity<List<HorarioBloqueJson>>(HttpStatus.NO_CONTENT);	            
@@ -207,27 +391,53 @@ public class VwHorarioMedicoController {
 				/**Rango horas*/
 				String fechaIniStr = UtilesCommons.printDate("yyyyMMdd",fechaFiltro);
 				//String fechaIniStr = UtilesCommons.printDate("yyyyMMdd",UtilesCommons.fechaMasNumeroDias(fechaFiltro,1)); 
-				//String fechaFinStr = UtilesCommons.printDate("yyyyMMdd",UtilesCommons.fechaMasNumeroDias(fechaFiltro,1));
+				String fechaFinStr = UtilesCommons.printDate("yyyyMMdd",fechaFiltroFin);
 				Date fechaHoraIni = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaIniStr+"00:00:00");					
-				Date fechaHoraFin = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaIniStr+"23:59:59");			
+				Date fechaHoraFin = UtilesCommons.getDateFormat("yyyyMMddhh:mm:ss",fechaFinStr+"23:59:59");			
 				/********/	
 				
 	        	//Generar bloques ... obtener feriados
 	        	List<HorarioBloqueJson> listaHorarioBloque = generarHorariosBloque(
 	        			listResult, TimeCommons.convertirEnDateTime(fechaHoraIni),
-	        			TimeCommons.convertirEnDateTime(fechaHoraFin), null);
+	        			TimeCommons.convertirEnDateTime(fechaHoraFin), feriados);
 	        			   		        
+	        	//Ordenar lista ... por fechaInicio (ASC) ***JRE_1.8
+	        	if(UtilesCommons.noEsVacio(listaHorarioBloque)){
+	        		listaHorarioBloque.sort((HorarioBloqueJson p1, HorarioBloqueJson p2) 
+	        				-> p1.getFechaInicio().compareTo(p2.getFechaInicio()));
+	        	}
+	        	
 		        return new ResponseEntity<List<HorarioBloqueJson>>(listaHorarioBloque, HttpStatus.OK);	        	
 	        }	
-	    }
+	    }	
 	    
-	    
-	    /**********************************************************************/
-	    /***************************UTILES HORARIO - CALENDARIO****************/
-
-	    		
-	    
-	    
+		/** Obtener los FERIADOS en MA, por fecha
+		 * @param inicio
+		 * @param fin
+		 * @return
+		 */
+		public Map<String, GE_DiaFeriado> obtenerFeriados(DateTime inicio, DateTime fin){
+			GE_DiaFeriado filtroFeriado = new GE_DiaFeriado();
+			DateTime fechaInicio =null;
+			if(inicio!=null){
+				fechaInicio = TimeCommons.getSoloFechaInicial(inicio);
+				filtroFeriado.setFechaInicioBusqueda(fechaInicio.toDate());
+			}
+			DateTime fechaFin =null;
+			if(fin!=null){
+				fechaFin = TimeCommons.getSoloFechaFinal(fin);
+				filtroFeriado.setFechaFinBusqueda(fechaFin.toDate());
+			}														
+			filtroFeriado.setEstado(Constant.INT_ACTIVO);
+			
+			if(diaFeriadoService == null){
+				return null;
+			}else{
+				return diaFeriadoService.obtenerMapeadoPorFechaFeriados(filtroFeriado);
+			}
+			
+		}
+		
 	    public VwHorarioMedico getFiltroHorarioDefault( Integer idmedico,Integer idespecialidad){
 	    	VwHorarioMedico filtro = new  VwHorarioMedico();
 
@@ -268,38 +478,39 @@ public class VwHorarioMedicoController {
 			//Lista que contendra los bloques de horarios ...
 			List<HorarioBloqueJson> listaHorarioBloque = new ArrayList<HorarioBloqueJson>(); 
 			filtro.setEstado(Constant.INT_ACTIVO);
-			VwHorarioMedico filtroHorario = null;;
+			filtro.setOrdernable(true);			
+			filtro.setAtributoOrdenacion("fechaCita");
+			VwHorarioMedico filtroHorario = null;			
 			
 			for(VwHorarioMedico vista : vistas){
 				filtroHorario = vista;
 				filtro.setIdHorario(vista.getIdHorario());
-				Map<String, List<SsCcCita>> mapCitas;
-				//= citaMedicaService.mapearCitasPorFecha(filtro);
+				Map<String, List<SsCcCita>> mapCitas = citaMedicaService.mapearCitasPorFecha(filtro);
 				
 				fechaInicioGeneracion = LocalDate.fromDateFields(TimeCommons.getSoloFecha(vista.getFechaInicio()).toDate());
 				fechaFinGeneracion = LocalDate.fromDateFields(TimeCommons.getSoloFecha(vista.getFechaFin()).toDate());
 				
 				if(vista.getIndicadorLunes().compareTo(INT_ACTIVO) == 0){
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_LUNES_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_LUNES_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 				if(vista.getIndicadorMartes().compareTo(INT_ACTIVO) == 0){
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_MARTES_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_MARTES_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 				if(vista.getIndicadorMiercoles().compareTo(INT_ACTIVO) == 0){
 					
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_MIERCOLES_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_MIERCOLES_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 				if(vista.getIndicadorJueves().compareTo(INT_ACTIVO) == 0){
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_JUEVES_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_JUEVES_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 				if(vista.getIndicadorViernes().compareTo(INT_ACTIVO) == 0){
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_VIERNES_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_VIERNES_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 				if(vista.getIndicadorSabado().compareTo(INT_ACTIVO) == 0){
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_SABADO_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_SABADO_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 				if(vista.getIndicadorDomingo().compareTo(INT_ACTIVO) == 0){
-					//obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_DOMINGO_JODA, inicio, fin, vista, mapCitas, feriados);
+					obtenerHorarioBloquesPorDia(filtroHorario,listaHorarioBloque,fechaInicioGeneracion, fechaFinGeneracion, TimeCommons.DIA_DOMINGO_JODA, inicio, fin, vista, mapCitas, feriados);
 				}
 			}
 			
@@ -320,7 +531,8 @@ public class VwHorarioMedicoController {
 		 */
 		public void obtenerHorarioBloquesPorDia(VwHorarioMedico filtroHorario, List<HorarioBloqueJson> listaHorarioBloque ,
 				LocalDate fechaInicial, LocalDate fechaFinal, 
-				int diaSemana, DateTime fechaInicialTope, DateTime fechaFinalTope, VwHorarioMedico vista, Map<String, List<SsCcCita>> citasMap, Map<String, GE_DiaFeriado> feriados){
+				int diaSemana, DateTime fechaInicialTope, DateTime fechaFinalTope, 
+				VwHorarioMedico vista, Map<String, List<SsCcCita>> citasMap, Map<String, GE_DiaFeriado> feriados){
 			DateTime hrInicio = TimeCommons.getSoloHora(vista.getHoraInicio());
 			DateTime hrFin = TimeCommons.getSoloHora(vista.getHoraFin());
 			
@@ -328,7 +540,7 @@ public class VwHorarioMedicoController {
 			LocalDate fechaSgte = fechaInicial.withDayOfWeek(diaSemana);
 			DateTime ahora = DateTime.now().withSecondOfMinute(0).withMillisOfSecond(0);
 			while(fechaSgte.isBefore(fechaFinal) || fechaSgte.isEqual(fechaFinal)){
-				if(TimeCommons.fechaContenidaEnRango(fechaInicialTope, fechaFinalTope, index)){
+				if(esFechaContenidaEnRango(fechaInicialTope, fechaFinalTope, index)){
 					LocalDate localDate = fechaSgte; //fechaSgte.withDayOfWeek(diaSemana);
 					if((localDate.isAfter(fechaInicial) || localDate.isEqual(fechaInicial)) && (localDate.isBefore(fechaFinal) || localDate.isEqual(fechaFinal))){
 						if(feriados == null || feriados.isEmpty() || !feriados.containsKey(localDate.toString(TimeCommons.PATTERN_FECHA))){
@@ -361,6 +573,14 @@ public class VwHorarioMedicoController {
 			}
 		}
 
+		public boolean esFechaContenidaEnRango(DateTime fechaInicialTope, DateTime fechaFinalTope, DateTime index){
+			if(fechaInicialTope == null && fechaFinalTope == null){
+				return true;
+			}else{
+				return TimeCommons.fechaContenidaEnRango(fechaInicialTope, fechaFinalTope, index);
+			}
+		}
+		
 		/**
 		 * @param vista
 		 * @param startDate

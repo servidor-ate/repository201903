@@ -18,6 +18,10 @@ import pe.royalsystems.springerp.erpspringsalud.util.JsonViewCustom;
 		/**Campos a ignorar*/	
 		"uri"
 		,"paginable"
+		,"bool_1"
+		,"int_1"
+		,"int_2"
+		,"string1"
 	})
 @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
 public class VwEspecialidadMedicoJson extends EntidadJson {
@@ -49,7 +53,20 @@ public class VwEspecialidadMedicoJson extends EntidadJson {
 	
 	private String tipoDocumento;	
 	private String tipoPersona;
-
+	
+	/**Added favoritos*/
+	private boolean indicaFavorito;	
+	private Integer idFavorito;
+	private Integer favoritoSecuencia;
+	private String iconoFavorito;
+	
+	/**Added Auxiliares*/
+	private boolean bool_1;	
+	private Integer int_1;
+	private Integer int_2;
+	private String string1;
+	
+	
 	public VwEspecialidadMedicoJson() {
 	}
 
@@ -243,6 +260,70 @@ public class VwEspecialidadMedicoJson extends EntidadJson {
 
 	public void setTipoPersona(String tipoPersona) {
 		this.tipoPersona = tipoPersona;
+	}
+
+	public boolean isIndicaFavorito() {
+		return indicaFavorito;
+	}
+
+	public void setIndicaFavorito(boolean indicaFavorito) {
+		this.indicaFavorito = indicaFavorito;
+	}
+
+	public Integer getIdFavorito() {
+		return idFavorito;
+	}
+
+	public void setIdFavorito(Integer idFavorito) {
+		this.idFavorito = idFavorito;
+	}
+
+	public Integer getFavoritoSecuencia() {
+		return favoritoSecuencia;
+	}
+
+	public void setFavoritoSecuencia(Integer favoritoSecuencia) {
+		this.favoritoSecuencia = favoritoSecuencia;
+	}
+
+	public String getIconoFavorito() {
+		return iconoFavorito;
+	}
+
+	public void setIconoFavorito(String iconoFavorito) {
+		this.iconoFavorito = iconoFavorito;
+	}
+
+	public boolean isBool_1() {
+		return bool_1;
+	}
+
+	public void setBool_1(boolean bool_1) {
+		this.bool_1 = bool_1;
+	}
+
+	public Integer getInt_1() {
+		return int_1;
+	}
+
+	public void setInt_1(Integer int_1) {
+		this.int_1 = int_1;
+	}
+
+	public Integer getInt_2() {
+		return int_2;
+	}
+
+	public void setInt_2(Integer int_2) {
+		this.int_2 = int_2;
+	}
+
+	public String getString1() {
+		return string1;
+	}
+
+	public void setString1(String string1) {
+		this.string1 = string1;
 	}
 
 }

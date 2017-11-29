@@ -1,6 +1,8 @@
 package pe.royalsystems.springerp.erpspringsalud.controller;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +25,12 @@ import pe.royalsystems.springerp.erpspringsalud.util.JsonViewAssembler;
 import pe.royalsystems.springerp.erpspringsalud.util.JsonViewCustom;
 import pe.royalsystems.springerp.erpspringsalud.util.UtilesRest;
 import pe.royalsystems.springerp.commons.TimeCommons;
+import pe.royalsystems.springerp.commons.UtilesCommons;
 import pe.royalsystems.springerp.model.domain.SsCcCita;
 import pe.royalsystems.springerp.model.domain.vista.VwCitaMedica;
 import pe.royalsystems.springerp.model.util.AuditoriaModel;
 import pe.royalsystems.springerp.model.util.Constant;
+import pe.royalsystems.springerp.service.CitaMedicaService;
 import pe.royalsystems.springerp.service.util.Log;
 
 
@@ -37,8 +41,8 @@ public class SsCcCitaController {
 	@Autowired
 	MessageSource msg;
 	
-	///@Autowired
-	//CitaMedicaService citaMedicaService;
+	@Autowired
+	CitaMedicaService citaMedicaService;
 	
 	 private JsonViewAssembler<VwCitaMedica, VwCitaMedicaJson> jsonAssemb = 
 			 new JsonViewAssembler<VwCitaMedica, VwCitaMedicaJson>(VwCitaMedicaJson.class);
@@ -54,7 +58,7 @@ public class SsCcCitaController {
 	    @RequestMapping(value = "/id/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	    @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
 	    public ResponseEntity<VwCitaMedicaJson> getElementoId(@PathVariable("id") Integer id) {	       
-	    	VwCitaMedica objResult =  null ; //citaMedicaService.obtenerPorId(id);
+	    	VwCitaMedica objResult = citaMedicaService.obtenerPorId(id);
 	        if (objResult == null) {	            
 	            return new ResponseEntity<VwCitaMedicaJson>(HttpStatus.NOT_FOUND);
 	        }else{	        	
@@ -71,7 +75,7 @@ public class SsCcCitaController {
     	VwCitaMedica filtro = new VwCitaMedica();
     	filtro.setCitaEstado(Constant.INT_ACTIVO);
     	filtro.setIdPaciente(idPaciente);
-        List<VwCitaMedica> listaResult = null ; //citaMedicaService.listarVwCitasMedicas(filtro);
+        List<VwCitaMedica> listaResult = citaMedicaService.listarVwCitasMedicas(filtro);	        	        	       	        
         
         if(listaResult == null || listaResult.isEmpty()){
             return new ResponseEntity<List<VwCitaMedicaJson>>(HttpStatus.NO_CONTENT);	            
@@ -90,7 +94,7 @@ public class SsCcCitaController {
     	VwCitaMedica filtro = new VwCitaMedica();
     	filtro.setCitaEstado(Constant.INT_ACTIVO);
     	filtro.setIdHorario(idHorario);
-        List<VwCitaMedica> listaResult = null ;//citaMedicaService.listarVwCitasMedicas(filtro);
+        List<VwCitaMedica> listaResult = citaMedicaService.listarVwCitasMedicas(filtro);	        	        	       	        
         
         if(listaResult == null || listaResult.isEmpty()){
             return new ResponseEntity<List<VwCitaMedicaJson>>(HttpStatus.NO_CONTENT);	            
@@ -102,7 +106,7 @@ public class SsCcCitaController {
 
     
     /**Regsitrar cita en el horario indicado
-
+     * @param persona
      * @param ucBuilder
      * @return
      */
@@ -111,6 +115,19 @@ public class SsCcCitaController {
     public ResponseEntity<HorarioBloqueJson> registrarCitaHorario(@PathVariable("idPaciente") Integer idPaciente,
     		@RequestBody HorarioBloqueJson horarioBloque,    UriComponentsBuilder ucBuilder) {	        
          try{	 
+        	         	         	
+				if(UtilesCommons.noEsVacio(horarioBloque.getPatterFecha()) 
+						&& UtilesCommons.noEsVacio(horarioBloque.getFechaInicioFormat())
+						&& UtilesCommons.noEsVacio(horarioBloque.getPatterHora())
+						&& UtilesCommons.noEsVacio(horarioBloque.getHoraInicioFormat())
+						){
+					Date fechaFiltro = UtilesCommons.getDateFormat(horarioBloque.getPatterFecha()+" "+ 
+							horarioBloque.getPatterHora(), 
+							horarioBloque.getFechaInicioFormat() +" "+horarioBloque.getHoraInicioFormat());
+					
+					horarioBloque.setFechaInicio(fechaFiltro);
+				}
+        	 
         	 SsCcCita citaModel =  getModeloCita(horarioBloque, idPaciente);	
 				     		
      		AuditoriaModel auditoria = new AuditoriaModel();
@@ -121,12 +138,13 @@ public class SsCcCitaController {
      		auditoria.setIpAuditoria(null);
      		auditoria.setMacAuditoria(null);
      		
-        	 Integer idCita = 0;//citaMedicaService.reservarCitaMedica(citaModel, auditoria);
+        	 Integer idCita = citaMedicaService.reservarCitaMedica(citaModel, auditoria);
      			//vistaSelected.setIdCita(idCita);
      		
         	 if(idCita>0){				
-        		 //int resultCorreo = personamastService.enviarCorreoRegistroPersonaUsuario(objTransacc);
-        		 //boolean resultEnvio = postEnvioCorreoUser(resultCorreo);
+        		 //ENVIO DE CORREO
+             	int resultMsg = citaMedicaService.enviarCorreoReservaCita(idCita, "SOLO_CITA");
+        		
         		 //persona.setAccion(""+resultCorreo);//AUX RESULT CORREO
         		 horarioBloque.setIdCita(idCita);
         		 return new ResponseEntity<HorarioBloqueJson>(horarioBloque, HttpStatus.CREATED);	 
@@ -140,7 +158,7 @@ public class SsCcCitaController {
     
 	 
     /** Envio de correo de una cita
-
+     * @param id
      * @return
      */
     @RequestMapping(value = "/enviocorreo/{idCIta}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -148,7 +166,7 @@ public class SsCcCitaController {
     public ResponseEntity<OpearacionResultJson> enviarCorreoCitas(@PathVariable("idCIta") Integer idCIta) {	       
     	OpearacionResultJson objResult = new OpearacionResultJson();
     	try{
-        	int resultMsg = 0; //citaMedicaService.enviarCorreoReservaCita(idCIta, "SOLO_CITA");
+        	int resultMsg = citaMedicaService.enviarCorreoReservaCita(idCIta, "SOLO_CITA");
         	boolean resultEnvio = postEnvioCorreoUser(objResult,resultMsg);
         	objResult.setOk(resultEnvio);
         	objResult.setEnvioCorreoOperacion(resultEnvio);

@@ -3,12 +3,6 @@ package pe.royalsystems.springerp.erpspringsalud.model;
 // Generated Sep 28, 2015 2:18:16 PM by Hibernate Tools 4.3.1
 
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -22,6 +16,10 @@ import pe.royalsystems.springerp.erpspringsalud.util.JsonViewCustom;
 @JsonViewCustom(JsonViewInterfaces.ViewGeneral.class)
 public class PersonamastJson extends EntidadJson  {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private Integer persona;
 	private String origen;
 	private String apellidoPaterno;
@@ -38,7 +36,9 @@ public class PersonamastJson extends EntidadJson  {
 	private String esEmpleado;
 	private String esOtro;
 	private String tipoPersona;
+		
 	private Date fechaNacimiento;
+	
 	private String ciudadNacimiento;
 	private String sexo;
 	private String nacionalidad;
@@ -71,13 +71,16 @@ public class PersonamastJson extends EntidadJson  {
 	private String clasePersonaCodigo;
 	private String personaClasificacion;
 	private String enfermedadGraveFlag;
+		
 	private Date ingresoFechaRegistro;
 	private String ingresoAplicacionCodigo;
 	private String ingresoUsuario;
 	private String pymeflag;
 	private String estado;
 	private String ultimoUsuario;
+	
 	private Date ultimaFechaModif;
+	
 	private String tipoPersonaUsuario;
 	private String direccionReferencia;
 	private String celular;
@@ -87,13 +90,18 @@ public class PersonamastJson extends EntidadJson  {
 	private String suspensionFonaviFlag;
 	private String flagRepetido;
 	private String codDiscamec;
+		
 	private Date fecIniDiscamec;
+		
 	private Date fecFinDiscamec;
 	private String codLicArma;
 	private String marcaArma;
 	private String serieArma;
+		
 	private Date inicioArma;
+	
 	private Date vencimientoArma;
+	
 	private String seguroDiscamec;
 	private String correlativoSctr;
 	private String cuentaMonedaExtranjeraTmp;
@@ -121,8 +129,12 @@ public class PersonamastJson extends EntidadJson  {
 	private Integer tipoMedico;
 	private Integer correcion;
 	private Integer idEmpresaAnteriorUnificacion;
+		
 	private Date breveteFecvcto;
+		
 	private Date carnetextranjeriaFecvcto;
+	
+	
 	private String estadoBk;
 	private String estadoBks;
 	private Integer indicadorVinculada;

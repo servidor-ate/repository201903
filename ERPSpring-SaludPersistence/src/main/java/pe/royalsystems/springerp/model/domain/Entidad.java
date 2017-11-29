@@ -11,6 +11,7 @@ public class Entidad implements Serializable{
 	private int numeroFilas;
 	private boolean paginable = false;// INDICA SI LA CONSULTA SERA PAGINADA
 	private boolean ordernable = false;// INDICA SI LA CONSULTA SE HARA
+	private boolean ordernableDesc = false;// INDICA SI LA CONSULTA SE HARA
 	// ORDENADAs
 	private String nombreConsulta = "";
 	
@@ -440,6 +441,14 @@ public class Entidad implements Serializable{
 
 	public void setAccionDbGlobal(String accionDbGlobal) {
 		this.accionDbGlobal = accionDbGlobal;
+	}
+
+	public boolean isOrdernableDesc() {
+		return ordernableDesc;
+	}
+
+	public void setOrdernableDesc(boolean ordernableDesc) {
+		this.ordernableDesc = ordernableDesc;
 	}
 	
 	
