@@ -33,7 +33,7 @@ spring:
         naming_strategy:  org.hibernate.cfg.DefaultNamingStrategy
         #naming-strategy:  org.hibernate.cfg.ImprovedNamingStrategy        
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        show_sql: true
+        show_sql: false
         format_sql: true          
         packagesToScan : pe.royalsystems.springerp.model
 
