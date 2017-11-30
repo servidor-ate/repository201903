@@ -39,25 +39,25 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 
 	@Autowired
 	private CitaMedicaDao citaMedicaDao;
-	
+
 	@Autowired
 	private HorarioMedicoDao horarioMedicoDao;
-	
+
 	@Autowired
 	private EmpleadoDao empleadoDao;
-	
+
 	@Autowired
 	private PersonamastDao personamastDao;
-	
+
 	@Autowired
 	private MaMiscelaneosDetalleDao miscelaneoDetalleDao;
-	
+
 	@Autowired
 	private EspecialidadDao especialidadDao;
-	
+
 	@Autowired
 	private ConsultorioDao consultorioDao;
-	
+
 	@Autowired
 	private SsAdOrdenAtencionDao ssAdOrdenAtencionDao;
 
@@ -66,26 +66,27 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 
 	@Autowired
 	private SsGePacienteDao ssGePacienteDao;
-	
+
 
 	@Autowired
 	private SsHcObligacionDao ssHcObligacionDao;
-	
+
 	@Autowired
 	private SsHcObligaciondetalleDao ssHcObligaciondetalleDao;
-	
-
-    @Autowired
-    private ParametrosMastDao parametrosMastDao;
-    
 
 
 	@Autowired
-	private EmailGenericService emailGenericService;	
-	
-    public static final String COD_OPERACION_RESERVA_CITA="RES";
-    
-    
+	private ParametrosMastDao parametrosMastDao;
+
+
+
+
+	@Autowired
+	private EmailGenericService emailGenericService;
+
+	public static final String COD_OPERACION_RESERVA_CITA="RES";
+
+
 	@Override
 	public VwCitaMedica obtenerPorId(Integer idCita){
 		try{
@@ -95,7 +96,7 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public List<VwCitaMedica> listarVwCitasMedicas(VwCitaMedica filtro) {
 		try{
@@ -109,44 +110,44 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 	@Override
 	@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false, rollbackFor = Exception.class)
 	public Integer reservarCitaMedica(SsCcCita cita, AuditoriaModel auditoriaModel) {
-		
+
 		SsCcCita citaEntidad = generarCitaMedica(cita, auditoriaModel);
-				
+
 		return citaEntidad!=null?citaEntidad.getIdCita():0;
 	}
-	
+
 	@Override
 	@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false, rollbackFor = Exception.class)
 	public Integer reprogramarCitaMedica(Integer idCitaAnterior, SsCcCita nuevaCita, AuditoriaModel auditoriaModel){
 		SsCcCita citaAnterior = citaMedicaDao.findById(idCitaAnterior);
-		
+
 		SsCcHorario horario = horarioMedicoDao.findById(nuevaCita.getIdHorario());
 		Date horaInicialCita = TimeCommons.getSoloHora(nuevaCita.getFechaCita()).toDate();
 		Date horaFinalCita = TimeCommons.getSoloHora(nuevaCita.getFechaCita()).plusMinutes(horario.getTiempoPromedioAtencion().intValue()).toDate();
-		
+
 		validarCruceReservas(horario, nuevaCita.getFechaCita(), horaInicialCita, horaFinalCita);
-		
+
 		nuevaCita.setIdHorario(horario.getIdHorario());
 //		nuevaCita.setUnidadReplicacion(horario.getUnidadReplicacion());
 		int nextId = citaMedicaDao.obtenerMaximoEnteroColumna("idCita") + 1;
 		nuevaCita.setIdCita(nextId);
-		
+
 		if(auditoriaModel != null){
 			citaAnterior.setUsuarioModificacion(auditoriaModel.getUsuarioAuditoria());
 			citaAnterior.setFechaModificacion(auditoriaModel.getFechaAuditoria());
-			
+
 			nuevaCita.setUsuarioCreacion(auditoriaModel.getUsuarioAuditoria());
 			nuevaCita.setFechaCreacion(auditoriaModel.getFechaAuditoria());
 		}
-		
+
 		citaAnterior.setEstadoDocumentoAnterior(citaAnterior.getEstadoDocumento());
 		citaAnterior.setEstadoDocumento(Constant.ESTADO_DOCUMENTO_ANULADO);
 		citaAnterior.setEstado(Constant.INT_INACTIVO);
 		citaAnterior.setIdCitaRelacionada(nuevaCita.getIdCita());
-		
+
 		citaMedicaDao.update(citaAnterior);
 		citaMedicaDao.save(nuevaCita);
-		
+
 		return nuevaCita.getIdCita();
 	}
 
@@ -157,17 +158,17 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			return citaMedicaDao.listarSSccCitasMedicas(filtro);
 		}catch(Exception ex){
 			Log.error(ex, "CitaMedicaServiceImpl :: mapearCitasPorFecha");
-		}				
+		}
 		return null;
 	}
-	
+
 
 	@Override
 	public Map<String, List<SsCcCita>> mapearCitasPorFecha(SsCcCita filtro){
 		Map<String, List<SsCcCita>> map = new LinkedHashMap<String, List<SsCcCita>>();
 		try{
 			List<SsCcCita> list = citaMedicaDao.listarSSccCitasMedicas(filtro);
-			for(SsCcCita cita : list){	
+			for(SsCcCita cita : list){
 				String key = TimeCommons.imprimirSoloFecha(cita.getFechaCita());
 				if(!map.containsKey(key)){
 					map.put(key, new ArrayList<SsCcCita>());
@@ -179,26 +180,26 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 		}
 		return map;
 	}
-	
+
 	@Override
 	public Map<String, List<SsCcCita>> mapearCitasPorFecha(List<SsCcCita> listaCitas){
 		Map<String, List<SsCcCita>> map = new LinkedHashMap<String, List<SsCcCita>>();
-		try{			
+		try{
 			if(UtilesCommons.noEsVacio(listaCitas)){
-				for(SsCcCita cita : listaCitas){	
+				for(SsCcCita cita : listaCitas){
 					String key = TimeCommons.imprimirSoloFecha(cita.getFechaCita());
 					if(!map.containsKey(key)){
 						map.put(key, new ArrayList<SsCcCita>());
 					}
 					map.get(key).add(cita);
-				}				
+				}
 			}
 		}catch(Exception ex){
 			Log.error(ex, "CitaMedicaServiceImpl :: mapearCitasPorFecha");
 		}
 		return map;
 	}
-	
+
 	@Override
 	public Personamast obtenerPaciente(Integer idCita){
 		try{
@@ -209,7 +210,7 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			return null;
 		}
 	}
-	
+
 	@Override
 	public PaginaModel<VwCitaMedica> listarVwCitasMedicasPaginadas(VwCitaMedica filtro){
 		try{
@@ -225,19 +226,19 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 	@Override
 	@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false, rollbackFor = Exception.class)
 	public ResultTx<SsAdOrdenAtencion> reservarCitaMedicaOA(SsCcCita cita, AuditoriaModel auditoriaModel,
-			Integer numeroCorrelativoOA){
+															Integer numeroCorrelativoOA){
 		Integer resultTx = 0;
 		try{
 			//ResultTx<T>
 			SsCcCita citaEntidad = generarCitaMedica(cita, auditoriaModel);
-				
+
 			if(citaEntidad!=null){
-				
+
 				/**4 - Crear y GUARAR OA (Orden de Atencion)*/
 				SsGePaciente objPaciente =  ssGePacienteDao.obtenerPorId(citaEntidad.getIdPaciente());
-					
-				SsAdOrdenAtencion objOA = new SsAdOrdenAtencion(); 			
-				objOA.setCodigoOa(""+numeroCorrelativoOA);//DESDE CORRELATIVO			
+
+				SsAdOrdenAtencion objOA = new SsAdOrdenAtencion();
+				objOA.setCodigoOa(""+numeroCorrelativoOA);//DESDE CORRELATIVO
 				objOA.setIdPaciente(objPaciente.getIdPaciente());
 				objOA.setTipoPaciente(objPaciente.getTipoPaciente());
 				objOA.setTipoAtencion(citaEntidad.getIdTipoAtencion());
@@ -253,16 +254,16 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 				objOA.setIdEmpleado(auditoriaModel.getIdUsuarioAuditoria());
 				objOA.setUnidadReplicacion(citaEntidad.getUnidadReplicacion());
 				objOA.setEstado(2);//ACTIVO OBS ***
-				
-			
+
+
 				resultTx = -4;
 				int resultOA = ssAdOrdenAtencionDao.guardar(objOA);
-				if(resultOA>0){								
+				if(resultOA>0){
 					objOA.setIdOrdenAtencion(resultOA);
 					//objOA.setCodigoOa(UtilesCommons.formatoCerosIzqNum(8,resultOA));
 					//ssAdOrdenAtencionDao.actualizar(objOA);
-					
-					/**4.1 - Crear y GUARAR OA DETALLEc(Orden de Atencion Detalle)*/	
+
+					/**4.1 - Crear y GUARAR OA DETALLEc(Orden de Atencion Detalle)*/
 					SsAdOrdenAtencionDetalle objOaDetalle = new SsAdOrdenAtencionDetalle();
 					objOaDetalle.getId().setIdOrdenAtencion(resultOA);
 					objOaDetalle.setUnidadReplicacionT(citaEntidad.getUnidadReplicacion());
@@ -276,40 +277,41 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 					objOaDetalle.setUsuarioModificacion(auditoriaModel.getUsuarioAuditoria());
 					objOaDetalle.setFechaCreacion(new Date());
 					objOaDetalle.setFechaModificacion(new Date());
-					resultTx = -5;		
-					ssAdOrdenAtencionDetalleDao.guardar(objOaDetalle);				
-					resultTx = resultOA;		
-					
+					resultTx = -5;
+					ssAdOrdenAtencionDetalleDao.guardar(objOaDetalle);
+					resultTx = resultOA;
+
 					//VwCitaMedica obj;
-					objOA.setInt_1(citaEntidad.getIdCita());//AUX PARA CITA			
-					
+					objOA.setInt_1(citaEntidad.getIdCita());//AUX PARA CITA
+
 					/****************INICIO TRACKING*******************/
 					boolean trackingValido = true;
 					//Obtener nombre especialiad
 					SsGeEspecialidad especialidad =  especialidadDao.findById(citaEntidad.getIdEspecialidad());
-					Personamast personaMedico =  personamastDao.obtenerPorId(citaEntidad.getIdMedico());					
+					Personamast personaMedico =  personamastDao.obtenerPorId(citaEntidad.getIdMedico());
 					if(especialidad!=null && personaMedico!=null){
-						
+
 						//OBS****documento.getInt3() AUX para ID DE CITA ver ManagedBean
-				
-						 		}
+
+
+				 		}
 
 					/****************FIN TRACKING*******************/
-					
+
 					if(trackingValido){
-						return ResultTx.ok(objOA);	
+						return ResultTx.ok(objOA);
 					}else{
 						return ResultTx.error(new SsAdOrdenAtencion(), ""+resultTx, "MSJ_ERROR_RESERVA_OA");
 					}
-									
-				}	
+
+				}
 			}
 			/**RETORNAR ID*/
 			//return citaEntidad.getIdCita();
 			//return resultTx;
-		}catch(Exception e){	
+		}catch(Exception e){
 			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-			Log.logger.error(Log.getStackTrace(e));				
+			Log.logger.error(Log.getStackTrace(e));
 			if(e instanceof CruceReservaException){
 				resultTx = -1;
 				return ResultTx.error(new SsAdOrdenAtencion(), ""+resultTx, "MSJ_ERROR_RESERVA_OA");
@@ -327,27 +329,27 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 	@Override
 	@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false, rollbackFor = Exception.class)
 	public ResultTx<SsHcObligacion> reservarCitaMedicaObligaciones(SsCcCita cita, AuditoriaModel auditoriaModel,
-			CoServicioClasificacion servicioPago) {
+																   CoServicioClasificacion servicioPago) {
 		Integer resultTx = 0;
 		try{
 			//ResultTx<T>
 			SsCcCita citaEntidad = generarCitaMedica(cita, auditoriaModel);
-				
-			if(citaEntidad!=null){								
+
+			if(citaEntidad!=null){
 				if(UtilesCommons.noEsVacio(servicioPago.getServicioclasificacion())){
 					ResultTx<SsHcObligacion> result =  generarObligacionesDeCita(citaEntidad, auditoriaModel, servicioPago);
 					if(!result.isOk()){
 						TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 						return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
 					}else{
-						
+
 						/****************INICIO TRACKING*******************/
 						boolean trackingValido = true;
 						//Obtener nombre especialiad
 						SsGeEspecialidad especialidad =  especialidadDao.findById(citaEntidad.getIdEspecialidad());
 						Personamast personaMedico =  personamastDao.obtenerPorId(citaEntidad.getIdMedico());
-						if(especialidad!=null && personaMedico!=null){														
-							}
+						if(especialidad!=null && personaMedico!=null){
+ 						}
 
 						/****************FIN TRACKING*******************/
 						if(trackingValido){
@@ -356,19 +358,19 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 							TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 							return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
 						}
-						
+
 					}
 				}else{
 					TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 					return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
-				}				
+				}
 			}else{
 				TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 				return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
 			}
 		}catch(Exception e){
 			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-			Log.logger.error(Log.getStackTrace(e));				
+			Log.logger.error(Log.getStackTrace(e));
 			if(e instanceof CruceReservaException){
 				resultTx = -1;
 				return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
@@ -379,14 +381,14 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			}
 		}
 		TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-		return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");	
-		
+		return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
+
 	}
-	
+
 	@Override
 	@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false, rollbackFor = Exception.class)
-	public ResultTx<SsHcObligacion>  reprogramarCitaMedicaObligaciones(Integer idCitaAnterior, SsCcCita nuevaCita,			
-			AuditoriaModel auditoriaModel,CoServicioClasificacion servicioPago) {		
+	public ResultTx<SsHcObligacion>  reprogramarCitaMedicaObligaciones(Integer idCitaAnterior, SsCcCita nuevaCita,
+																	   AuditoriaModel auditoriaModel,CoServicioClasificacion servicioPago) {
 		Integer resultTx = 0;
 		try{
 			//ELIMINAR
@@ -395,7 +397,7 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			//ResultTx<T>
 			SsCcCita citaEntidad = generarCitaMedica(nuevaCita, auditoriaModel);
 			//GENERAR  SUS  OBLIGACIONES
-			if(citaEntidad!=null){								
+			if(citaEntidad!=null){
 				if(UtilesCommons.noEsVacio(servicioPago.getServicioclasificacion())){
 					ResultTx<SsHcObligacion> result =  generarObligacionesDeCita(citaEntidad, auditoriaModel, servicioPago);
 					if(!result.isOk()){
@@ -407,14 +409,14 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 				}else{
 					TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 					return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
-				}				
+				}
 			}else{
 				TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 				return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
-			}			
+			}
 		}catch(Exception e){
 			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-			Log.logger.error(Log.getStackTrace(e));						
+			Log.logger.error(Log.getStackTrace(e));
 		}
 		TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 		return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");
@@ -423,23 +425,23 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 	@Override
 	@Transactional(isolation = Isolation.SERIALIZABLE, readOnly = false, rollbackFor = Exception.class)
 	public Integer anularCitaMedica(Integer idCitaAnterior,
-			AuditoriaModel auditoriaModel) {
+									AuditoriaModel auditoriaModel) {
 		Integer resultTx = 0;
 		try{
 			resultTx = eliminarCitaMedicaObligaciones(idCitaAnterior);
 			return resultTx;
 		}catch(Exception e){
 			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-			Log.logger.error(Log.getStackTrace(e));						
+			Log.logger.error(Log.getStackTrace(e));
 		}
 		TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
 		return resultTx;
 	}
-	
+
 	/*********** SERVICES AUXILIARES***********/
-	
+
 	public int eliminarCitaMedicaObligaciones(Integer idCita) {
-		int result  = 0;		
+		int result  = 0;
 		/**1.- buscar cita Medica actual*/
 		SsCcCita citaAnterior = citaMedicaDao.findById(idCita);
 		if(citaAnterior!=null){
@@ -460,77 +462,76 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 					}
 					ssHcObligacionDao.eliminar(resultDelete);
 				}
-			}	
+			}
 			/**3.- eliminar CITA*/
 			citaMedicaDao.delete(citaAnterior);
 			result =1;
 		}
 		return result;
 	}
-	
-	public ResultTx<SsHcObligacion> generarObligacionesDeCita(SsCcCita citaEntidad, AuditoriaModel auditoriaModel,
-			CoServicioClasificacion servicioPago) {
-		Integer resultTx = 0;
 
-		return ResultTx.error(new SsHcObligacion(), ""+resultTx, "MSJ_ERROR_RESERVA");	
+	public ResultTx<SsHcObligacion> generarObligacionesDeCita(SsCcCita citaEntidad, AuditoriaModel auditoriaModel,
+															  CoServicioClasificacion servicioPago) {
+		Integer resultTx = 0;
+	  return null;
 	}
-	
+
 	public SsCcCita generarCitaMedica(SsCcCita cita, AuditoriaModel auditoriaModel) {
 		//ResultTx<T>
 		/**1.- buscar horario*/
 		SsCcHorario horario = horarioMedicoDao.findById(cita.getIdHorario());
-		
+
 		/**2.- buscar Consultorio*/
 		SsGeConsultorio consultorio = consultorioDao.findById(horario.getIdConsultorio());
-		
-		
+
+
 		/**3.- Crrear y guardar la CITA*/
 		SsCcCita citaEntidad = null;
-		
+
 		Date horaInicialCita = TimeCommons.getSoloHora(cita.getFechaCita()).toDate();
 		Date horaFinalCita = TimeCommons.getSoloHora(cita.getFechaCita()).plusMinutes(horario.getTiempoPromedioAtencion().intValue()).toDate();
-		
+
 		/**3.1. - Validar CRUCES RESERVAS*/
 		validarCruceReservas(horario, cita.getFechaCita(), horaInicialCita, horaFinalCita); // VALIDAMOS LOS CRUCES DE HORARIOS
 		/**3.2. - Validar CITAS PERMITIDAS*/
 		validarCitasPermitidas(horario, cita.getIdPaciente(), auditoriaModel); // VALIAMOS EL NUMERO MAXIMO DE CITAS QUE SE PUEDEN REALIZAR POR DIA, PARA EL MISMO M�DICO Y LA MISMA ESPECIALIDAD
-			
-		
-		
+
+
+
 		citaEntidad = new SsCcCita();
 		BeanUtils.copyProperties(cita, citaEntidad, "idHorario");
 		citaEntidad.setIdHorario(horario.getIdHorario());
-		
+
 		citaEntidad.setIdEspecialidad(horario.getIdEspecialidad());
 		if(UtilesCommons.esVacio(cita.getCompania())){
-			citaEntidad.setCompania(cita.getCompania());	
+			citaEntidad.setCompania(cita.getCompania());
 		}
 		if(UtilesCommons.esVacio(cita.getUnidadNegocio())){
-			citaEntidad.setUnidadNegocio(cita.getUnidadNegocio());	
+			citaEntidad.setUnidadNegocio(cita.getUnidadNegocio());
 		}
 		if(UtilesCommons.esVacio(cita.getSucursal())){
-			citaEntidad.setSucursal(cita.getSucursal());	
+			citaEntidad.setSucursal(cita.getSucursal());
 		}
 		if(UtilesCommons.esVacio(cita.getUnidadReplicacion())){
-			citaEntidad.setUnidadReplicacion(cita.getUnidadReplicacion());	
-		}				
-			
+			citaEntidad.setUnidadReplicacion(cita.getUnidadReplicacion());
+		}
+
 		int nextId = citaMedicaDao.obtenerMaximoEnteroColumna("idCita") + 1;
-		
-		
+
+
 		citaEntidad.setIdCita(nextId);
-			
+
 		if(auditoriaModel != null){
 			citaEntidad.setUsuarioCreacion(auditoriaModel.getUsuarioAuditoria());
 			citaEntidad.setFechaCreacion(auditoriaModel.getFechaAuditoria());
-		}	
-		
+		}
+
 		citaMedicaDao.save(citaEntidad);
 		//
 		return citaEntidad;
 	}
-	
-	
+
+
 	public void validarCruceReservas(SsCcHorario horario, Date fecha, Date horaInicio, Date horaFin){
 		SsCcCita filtro = new SsCcCita();
 		filtro.setEstado(Constant.INT_ACTIVO);
@@ -539,9 +540,9 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 		DateTime fechaFin = TimeCommons.getSoloFechaFinal(fecha);
 		filtro.setFechaInicioBusqueda(fechaInicio.toDate());
 		filtro.setFechaFinBusqueda(fechaFin.toDate());
-		
+
 		List<SsCcCita> list = citaMedicaDao.listarSSccCitasMedicas(filtro);
-		
+
 		for(SsCcCita cita : list){
 			Date horaInicial = TimeCommons.getSoloHora(cita.getFechaCita()).toDate();
 			Date horaFinal = TimeCommons.getSoloHora(cita.getFechaCita()).plusMinutes(horario.getTiempoPromedioAtencion().intValue()).toDate();
@@ -558,23 +559,23 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			}
 		}
 	}
-	
+
 	public void validarCitasPermitidas(SsCcHorario horario, Integer idPaciente, AuditoriaModel auditoria){
 		MaMiscelaneosDetalle filtroMiscelaneo = new MaMiscelaneosDetalle();
 		filtroMiscelaneo.setAplicacionCodigo(Constant.APP_CODIGO);
 		filtroMiscelaneo.setCompania(Constant.APP_COMPANIA);
 		filtroMiscelaneo.setCodigoTabla(Constant.MISCELANEO_HEADER_VALIDACION_CITAS_WEB);
 		filtroMiscelaneo.setCodigoElemento(Constant.MISCELANEO_DETALLE_VALIDACION_CITAS_POR_DIA);
-		
+
 		MaMiscelaneosDetalle objValidacion = miscelaneoDetalleDao.obtenerPorId(filtroMiscelaneo);
 		if(objValidacion == null || UtilesCommons.esVacio(objValidacion.getEstado()) || objValidacion.getEstado().equalsIgnoreCase(Constant.INACTIVO)){
 			return;
 		}else{
-			if(UtilesCommons.esPositivo(objValidacion.getValorNumerico())){		
+			if(UtilesCommons.esPositivo(objValidacion.getValorNumerico())){
 				Date fecha = auditoria.getFechaAuditoria();
 				DateTime fechaInicio = TimeCommons.getSoloFechaInicial(fecha);
 				DateTime fechaFin = TimeCommons.getSoloFechaFinal(fecha);
-				
+
 				SsCcCita filtroCita = new SsCcCita();
 				filtroCita.setIdPaciente(idPaciente);
 				filtroCita.setUsuarioCreacion(auditoria.getUsuarioAuditoria());
@@ -584,11 +585,11 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 				filtroCita.setIndicadorWeb(Constant.INT_ACTIVO);
 				filtroCita.setFechaInicioBusqueda(fechaInicio.toDate());
 				filtroCita.setFechaFinBusqueda(fechaFin.toDate());
-				
-				
+
+
 				int numeroCitasPermitido = objValidacion.getValorNumerico().intValue();
 				int numeroCitas = citaMedicaDao.contarNumeroCitasPorDia(filtroCita) + 1;
-				
+
 				if(numeroCitas > numeroCitasPermitido){
 					CitasPermitidasException exp = new CitasPermitidasException();
 					exp.setFecha(fecha);
@@ -597,32 +598,32 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 					exp.setNumeroMaximoCitas(numeroCitasPermitido);
 					exp.setEspecialidadNombre("");
 					exp.setMedicoNombre("");
-					
+
 					SsGeEspecialidad especialidad = especialidadDao.findById(horario.getIdEspecialidad());
 					if(especialidad != null){
 						exp.setIdEspecialidad(especialidad.getIdEspecialidad());
 						exp.setEspecialidadNombre(especialidad.getNombre());
 					}
-					
+
 					VwEmpleado medico = empleadoDao.obtenerPorId(horario.getMedico());
 					if(medico != null){
 						exp.setIdMedico(medico.getEmpleado());
 						exp.setMedicoNombre(medico.getNombreCompleto());
 					}
-					throw exp;
+					//throw exp;
 				}
 			}else{
 				return;
 			}
 		}
-		
+
 	}
 
 	@Override
-	public int enviarCorreoReservaCita(Integer idCita, String indica) {		
+	public int enviarCorreoReservaCita(Integer idCita, String indica) {
 		try{
-			Personamast paciente = obtenerPaciente(idCita);						
-			VwCitaMedica cita = obtenerPorId(idCita);			
+			Personamast paciente = obtenerPaciente(idCita);
+			VwCitaMedica cita = obtenerPorId(idCita);
 			return enviarCorreo(cita, paciente);
 		}catch(Exception e){
 			Log.error(e, "enviarCorreoReservaCita");
@@ -631,7 +632,7 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 	}
 
 	private static final String PATTERN_HORARIO_CITA = TimeCommons.PATTERN_FECHA+" "+TimeCommons.PATTERN_12_HORA_AM_PM;
-	
+
 	/**
 	 * @param cita
 	 * @param paciente
@@ -649,18 +650,19 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 				}
 			}
 			cita.setDescripcionEstadoCita(Utiles.getPropertyMsg("MSJ_ESTADO_PROGRAMADO_CITA"));
-			
+			//cita.setDescripcionEstadoCita("Programado");
+
 			String citaHorario = TimeCommons.convertirEnDateTime(cita.getFechaCita()).toString(PATTERN_HORARIO_CITA);
 			if(cita.getDuracionPromedio() != null && cita.getDuracionPromedio() > 0){
 				citaHorario = citaHorario+" - "+TimeCommons.convertirEnDateTime(cita.getFechaCita()).plusMinutes(cita.getDuracionPromedio().intValue()).toString(TimeCommons.PATTERN_12_HORA_AM_PM);
 			}
 			String info = Utiles.getPropertyMsg("MSJ_RESERVA_CITA_CORREO_BODY_HTML");
-			String formattedInfo = MessageFormat.format(info, cita.getIdCita(), convertirEnMayusculas(cita.getPacienteNombreCompleto()), cita.getPacienteDocumento(), convertirEnMayusculas(cita.getEspecialidadNombre()), convertirEnMayusculas(cita.getMedicoNombreCompleto()), citaHorario, convertirEnMayusculas(cita.getDescripcionEstadoCita()), 
-					convertirEnMayusculas(cita.getConsultorioNombre()), cita.getConsultorioPool());								
-			String body = formattedInfo;				
+			String formattedInfo = MessageFormat.format(info, cita.getIdCita(), convertirEnMayusculas(cita.getPacienteNombreCompleto()), cita.getPacienteDocumento(), convertirEnMayusculas(cita.getEspecialidadNombre()), convertirEnMayusculas(cita.getMedicoNombreCompleto()), citaHorario, convertirEnMayusculas(cita.getDescripcionEstadoCita()),
+					convertirEnMayusculas(cita.getConsultorioNombre()), cita.getConsultorioPool());
+			String body = formattedInfo;
 			String subject = Utiles.getPropertyMsg("MSJ_RESERVA_CITA_CORREO_SUBJECT");
-			
-			
+
+
 			Map<String, String> variables = new LinkedHashMap<String, String>();
 			variables = adicionarVariable(variables, Utiles.getPropertyService("PAR_NRO_ORDEN"), String.valueOf(cita.getIdCita()));
 			variables = adicionarVariable(variables, Utiles.getPropertyService("PAR_NOMBRE_PACIENTE"), convertirEnMayusculas(cita.getPacienteNombreCompleto()));
@@ -671,16 +673,16 @@ public class CitaMedicaServiceImpl implements CitaMedicaService {
 			variables = adicionarVariable(variables, Utiles.getPropertyService("PAR_ESTADO"), convertirEnMayusculas(cita.getDescripcionEstadoCita()));
 			variables = adicionarVariable(variables, Utiles.getPropertyService("PAR_CONSULTORIO"), convertirEnMayusculas(cita.getConsultorioNombre()));
 			variables = adicionarVariable(variables, Utiles.getPropertyService("PAR_POOL"), String.valueOf(cita.getConsultorioPool()));
-					
+
 			Email email = emailGenericService.getObjetoMail(listCorreos, subject, body, null, TimeCommons.obtenerFechaHoraActual(), variables);
-			
-			resultMsg = emailGenericService.enviarCorreo(email, Utiles.getPropertyService("PROC_REG_CITAS"));	
+
+			resultMsg = emailGenericService.enviarCorreo(email, Utiles.getPropertyService("PROC_REG_CITAS"));
 		}catch(Exception e){
 			Log.error(e, "enviarCorreo");
 		}
 		return resultMsg;
 	}
-	
+
 	public Map<String, String> adicionarVariable(Map<String, String> map, String key, String value){
 		if(key != null && !key.trim().equals("")){
 			map.put(key, value);
