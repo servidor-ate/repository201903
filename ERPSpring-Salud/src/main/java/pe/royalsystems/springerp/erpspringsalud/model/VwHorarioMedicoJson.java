@@ -21,14 +21,14 @@ public class VwHorarioMedicoJson extends EntidadJson {
 	
 	
 	private Integer estado;	
-	private Date fechaCreacion;	
-	private Date fechaFin;	
-	private Date fechaFinHorario;
-	private Date fechaInicio;
-	private Date fechaInicioHorario;	
-	private Date fechaModificacion;	
-	private Date horaFin;	
-	private Date horaInicio;	
+	private String fechaCreacion;
+	private String fechaFin;
+	private String fechaFinHorario;
+	private String fechaInicio;
+	private String fechaInicioHorario;
+	private String fechaModificacion;
+	private String horaFin;
+	private String horaInicio;
 	private Integer idConsultorio;	
 	private Integer idEspecialidad;	
 	private Integer idGrupoAtencionCompartido;
@@ -129,67 +129,67 @@ public class VwHorarioMedicoJson extends EntidadJson {
 		this.estado = estado;
 	}
 
-	public Date getFechaCreacion() {
+	public String getFechaCreacion() {
 		return fechaCreacion;
 	}
 
-	public void setFechaCreacion(Date fechaCreacion) {
+	public void setFechaCreacion(String fechaCreacion) {
 		this.fechaCreacion = fechaCreacion;
 	}
 
-	public Date getFechaFin() {
+	public String getFechaFin() {
 		return fechaFin;
 	}
 
-	public void setFechaFin(Date fechaFin) {
+	public void setFechaFin(String fechaFin) {
 		this.fechaFin = fechaFin;
 	}
 
-	public Date getFechaFinHorario() {
+	public String getFechaFinHorario() {
 		return fechaFinHorario;
 	}
 
-	public void setFechaFinHorario(Date fechaFinHorario) {
+	public void setFechaFinHorario(String fechaFinHorario) {
 		this.fechaFinHorario = fechaFinHorario;
 	}
 
-	public Date getFechaInicio() {
+	public String getFechaInicio() {
 		return fechaInicio;
 	}
 
-	public void setFechaInicio(Date fechaInicio) {
+	public void setFechaInicio(String fechaInicio) {
 		this.fechaInicio = fechaInicio;
 	}
 
-	public Date getFechaInicioHorario() {
+	public String getFechaInicioHorario() {
 		return fechaInicioHorario;
 	}
 
-	public void setFechaInicioHorario(Date fechaInicioHorario) {
+	public void setFechaInicioHorario(String fechaInicioHorario) {
 		this.fechaInicioHorario = fechaInicioHorario;
 	}
 
-	public Date getFechaModificacion() {
+	public String getFechaModificacion() {
 		return fechaModificacion;
 	}
 
-	public void setFechaModificacion(Date fechaModificacion) {
+	public void setFechaModificacion(String fechaModificacion) {
 		this.fechaModificacion = fechaModificacion;
 	}
 
-	public Date getHoraFin() {
+	public String getHoraFin() {
 		return horaFin;
 	}
 
-	public void setHoraFin(Date horaFin) {
+	public void setHoraFin(String horaFin) {
 		this.horaFin = horaFin;
 	}
 
-	public Date getHoraInicio() {
+	public String getHoraInicio() {
 		return horaInicio;
 	}
 
-	public void setHoraInicio(Date horaInicio) {
+	public void setHoraInicio(String horaInicio) {
 		this.horaInicio = horaInicio;
 	}
 
